@@ -7,7 +7,7 @@ system('clear');
 #       PLOT FUNCTIONS
 #===================================
 
-function plot_object(ax, object)
+function plot_object(object)
   V = object.V;
   E = object.E;
 
@@ -25,12 +25,12 @@ function plot_object(ax, object)
     Y2 = V(2, v2);
     Z2 = V(3, v2);
 
-    plot3([Z1 Z2], [X1 X2], [Y1 Y2], 'color', object.color, ax=ax);
+    plot3([Z1 Z2], [X1 X2], [Y1 Y2], 'color', object.color);
     hold on;
   endfor
 end
 
-function scatter_object(ax, object)
+function scatter_object(object)
   V = object.V;
 
   [r c] = size(V);
@@ -45,7 +45,7 @@ function scatter_object(ax, object)
   endfor
 end
 
-function plot_2d_object(ax, object, M)
+function plot_2d_object(object, M)
   V = object.V;
   E = object.E;
 
@@ -56,12 +56,14 @@ function plot_2d_object(ax, object, M)
   t = 1:c;
 
   for x=t
-    V(:, x) = V(:, x) / V(4, x);
+    V(1, x) = V(1, x) / V(4, x);
+    V(2, x) = V(2, x) / V(4, x);
+    V(3, x) = V(3, x) / V(4, x);
   endfor
 
-  for i=1:n_edges
-    V1 = E(i, 1);
-    V2 = E(i, 2);
+  for x=1:n_edges
+    V1 = E(x, 1);
+    V2 = E(x, 2);
 
     X1 = V(1, V1);
     Y1 = V(2, V1);
@@ -186,7 +188,7 @@ function M = create_camera_system_transformation_matrix(at, eye)
     0 1 0 -eye(2, 1) ;
     0 0 1 -eye(3, 1) ;
     0 0 0 1 ;
-  ];
+  ]
 
   M = R * T;
 end
@@ -221,7 +223,7 @@ function object = create_cylinder(
   V_o = [
     zeros([1 circles]) ;
     0.5 - t ;
-    zeros([1 circles]) + 0.5;
+    zeros([1 circles]) + 1;
     ones([1 circles])
   ];
 
@@ -281,7 +283,7 @@ function object = create_cone(bases, pp_base, color)
   V_o= [
     zeros([1 length(t)]) ;
     -t + 0.5 ;
-    0.5 * t ;
+    t ;
     ones([1 length(t)])
   ];
 
@@ -531,101 +533,142 @@ function object = create_prysm(k, sides, surfaces, color)
   );
 end
 
-function configure_axis(ax, xlimits, ylimits, zlimits)
+function configure_axis(xlimits, ylimits, zlimits)
+  ax = gca()
+
   set(ax, "xdir", "reverse");
   set(ax, "ydir", "reverse");
-  set(ax, "ylim", xlimits);
-  set(ax, "zlim", ylimits);
-  set(ax, "xlim", zlimits);
-  set(ax, 'cameraviewanglemode', 'manual');
 
-  set(ax, "xlabel", "Z");
-  set(ax, "ylabel", "X");
-  set(ax, "zlabel", "Y");
+  set(ax, 'cameraviewanglemode', 'manual')
+
+  xlabel('Z');
+  ylabel('X');
+  zlabel('Y');
+
+  axis([ zlimits xlimits ylimits ]);
 end
 
-ax = gca();
-
+# Creation of the world objects
 cube = create_cube('#00FF00');
 cube = object_scale(cube, 2, 2, 2);
-cube = object_translate(cube, -2, 1, -3);
 
 sphere = create_sphere(20, 20, '#9933FF');
 sphere = object_scale(sphere, 1, 1, 1);
-sphere = object_translate(sphere, -6, 1, -3);
 
 cylinder = create_cylinder(4, 20, '#00CCCC');
-cylinder = object_scale(cylinder, 2, 3, 2);
-cylinder = object_translate(cylinder, -4, +1.5, -7.24);
+cylinder = object_scale(cylinder, 1, 3, 1);
 
 cone = create_cone(4, 20, '#0000FF');
-cone = object_scale(cone, 2, 3, 2);
-cone = object_translate(cone, 2, +1.5, -3);
+cone = object_scale(cone, 1, 3, 1);
 
-trunk = create_prysm(0.6, 4, 4, '#FF0000');
-trunk = object_scale(trunk, 2, 3, 2);
-trunk = object_translate(trunk, 6, +1.5, -3);
+frustum = create_prysm(0.6, 4, 4, '#FF0000');
+frustum = object_scale(frustum, 2, 3, 2);
 
 toroid = create_toroid(0.5, 1, 20, 10, '#FF8000');
 toroid = object_scale(toroid, 2, 2, 2);
+
+# plot_object(cube);
+# configure_axis([-1 1], [-1 1], [-1 1]);
+# input('Press any key to continue...');
+# hold off;
+
+# plot_object(sphere);
+# configure_axis([-1 1], [-1 1], [-1 1]);
+# input('Press any key to continue...');
+# hold off;
+
+# plot_object(cylinder);
+# configure_axis([-1.5 1.5], [-1.5 1.5], [-1.5 1.5]);
+# input('Press any key to continue...');
+# hold off;
+
+# plot_object(cone);
+# configure_axis([-1.5 1.5], [-1.5 1.5], [-1.5 1.5]);
+# input('Press any key to continue...');
+# hold off;
+
+# plot_object(frustum);
+# configure_axis([-1.5 1.5], [-1.5 1.5], [-1.5 1.5]);
+# input('Press any key to continue...');
+# hold off;
+
+# plot_object(toroid);
+# configure_axis([-3 3], [-3 3], [-3 3]);
+# input('Press any key to continue...');
+# hold off;
+
+# Placing the objects in their positions in the scene
+cube = object_translate(cube, -2, 1, -3);
+cylinder = object_translate(cylinder, -4, +1.5, -7.24);
+sphere = object_translate(sphere, -6, 1, -3);
+cone = object_translate(cone, 2, +1.5, -3);
+
+frustum = object_rotate_Y(frustum, pi / 4)
+frustum = object_translate(frustum, 6, +1.5, -3);
+
+toroid = object_rotate_X(toroid, pi / 6);
 toroid = object_translate(toroid, 4, 6, -7.24);
 
-eye = [ 0 ; 5 ; 5 ; 1 ]
-at = cat(2, cube.V, sphere.V, cylinder.V, cone.V, trunk.V, toroid.V);
-at = sum(at, 2) / size(at)(2)
+eye = [ -4 ; 5 ; 2.5 ; 1 ];
+at = cat(2, cube.V, sphere.V, cylinder.V, cone.V, frustum.V, toroid.V);
+at = sum(at, 2) / size(at)(2);
 
-# plot_object(ax, cube);
-# plot_object(ax, sphere);
-# plot_object(ax, cylinder);
-# plot_object(ax, trunk);
-# plot_object(ax, cone);
-# plot_object(ax, toroid);
-# scatter3(eye(3, 1), eye(1, 1), eye(2, 1), 18, 'b', "filled");
-# scatter3(at(3, 1), at(1, 1), at(2, 1), 18, 'r', "filled");
-# configure_axis(ax, [-10 10], [-10 10], [-10 10]);
+# plot_object(cube);
+# plot_object(sphere);
+# plot_object(cylinder);
+# plot_object(frustum);
+# plot_object(cone);
+# plot_object(toroid);
+# configure_axis([-10 10], [-10 10], [-10 10]);
 
 # input('Press any key to continue...');
 # hold off;
 
+# Composing the camera coordinate system
 M = create_camera_system_transformation_matrix(at, eye);
 
+
+origin = M * [ 0 ; 0 ; 0 ; 1];
 cube.V = M * cube.V;
 cylinder.V = M * cylinder.V;
 sphere.V = M * sphere.V;
 cone.V = M * cone.V;
-trunk.V = M * trunk.V;
+frustum.V = M * frustum.V;
 toroid.V = M * toroid.V;
 
-# plot_object(ax, cube);
-# plot_object(ax, sphere);
-# plot_object(ax, cylinder);
-# plot_object(ax, trunk);
-# plot_object(ax, cone);
-# plot_object(ax, toroid);
-# scatter3(0, 0, 0, 18, 'b', "filled");
-# configure_axis(ax, [-10 10], [-10 10], [0 20]);
+plot_object(cube);
+plot_object(sphere);
+plot_object(cylinder);
+plot_object(frustum);
+plot_object(cone);
+plot_object(toroid);
+scatter3(origin(3), origin(1), origin(2), "filled")
+configure_axis([-10 10], [-10 10], [0 20]);
 
-# input('Press any key to continue');
-# hold off;
+input('Press any key to continue');
+hold off;
 
+# Projecting the objects in the viewing volume in a bidimensional plane
 fovy = 2 * pi / 3;
 aspect = 1;
 z_far = 20;
-top = 1
+top = 1;
 
 z_near = top / tan(fovy / 2)
 right = top * aspect
 
 M = [
-  z_near / right ,0 ,0, 0 ;
+  z_near / right, 0, 0, 0 ;
   0, -z_near / top, 0, 0 ;
-  0, 0, -(z_far+z_near) / (z_far - z_near), -2 * z_far * z_near / (z_far - z_near);
-  0, 0, -1, 0
+  0, 0, -(z_far + z_near) / (z_far - z_near), -(2 * z_far * z_near) / (z_far - z_near);
+  0, 0, -1, 0 ;
 ]
 
-plot_2d_object(ax, cube, M);
-plot_2d_object(ax, cylinder, M);
-plot_2d_object(ax, sphere, M);
-plot_2d_object(ax, cone, M);
-plot_2d_object(ax, trunk, M);
-plot_2d_object(ax, toroid, M);
+plot_2d_object(cube, M);
+plot_2d_object(cylinder, M);
+plot_2d_object(sphere, M);
+plot_2d_object(cone, M);
+plot_2d_object(frustum, M);
+plot_2d_object(toroid, M);
+xlim([-right right])
+ylim([-1 1]);
